@@ -1,8 +1,23 @@
 {
   "permissions": {
     "allow": [
-      "WebFetch(domain:docs.anthropic.com)",
-      "WebSearch"
+      "Read",
+      "Write",
+      "Edit",
+      "WebFetch",
+      "WebSearch",
+      "Bash(git *)",
+      "Bash(node *)",
+      "Bash(npm *)",
+      "Bash(python *)",
+      "Bash(cmake *)",
+      "Bash(make *)",
+      "Bash(g++ *)",
+      "Bash(ls *)",
+      "Bash(cat *)",
+      "Bash(tree *)",
+      "Bash(grep *)",
+      "Bash(curl *)"
     ]
   }
 }
