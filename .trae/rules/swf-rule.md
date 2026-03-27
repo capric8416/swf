@@ -3,6 +3,4 @@
 3. 文档输出始终是Markdown格式
 4. 文档中不能包含任何代码
 5. 流程图必须使用Mermaid语法绘制
-6. SKILL定义和优化请参考
-   - <https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview>
 
