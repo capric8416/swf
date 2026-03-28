@@ -5,6 +5,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.auth import router as auth_router
+from app.api.v1.projects import router as projects_router
+from app.api.v1.stats.global_stats import router as global_stats_router
+from app.api.v1.stats.personal import router as personal_stats_router
+from app.api.v1.stats.projects import router as project_stats_router
+from app.api.v1.sync import router as sync_router
+from app.api.v1.users import router as users_router
 from app.core.config import settings
 from app.core.logging import setup_logging
 
@@ -33,6 +40,15 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# API routes
+app.include_router(auth_router, prefix="/api/v1")
+app.include_router(users_router, prefix="/api/v1")
+app.include_router(projects_router, prefix="/api/v1")
+app.include_router(global_stats_router, prefix="/api/v1/stats/global")
+app.include_router(project_stats_router, prefix="/api/v1/stats/projects")
+app.include_router(personal_stats_router, prefix="/api/v1/stats/personal")
+app.include_router(sync_router, prefix="/api/v1/sync")
 
 
 @app.get("/health")
