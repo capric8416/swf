@@ -13,6 +13,10 @@ from app.schemas.stats import (
     PersonalCodeStatsResponse,
     PersonalTokenStatsResponse,
 )
+from app.services.code_stats_service import CodeStatsService
+from app.services.token_stats_service import TokenStatsService
+from app.services.bug_stats_service import BugStatsService
+from app.core.dependencies import get_code_stats_service, get_token_stats_service, get_bug_stats_service
 
 router = APIRouter(tags=["personal-stats"])
 
@@ -37,6 +41,7 @@ async def get_personal_code_stats(
     start_date: date | None = Query(None, description="开始日期"),
     end_date: date | None = Query(None, description="结束日期"),
     db: AsyncSession = Depends(get_db),
+    code_stats_service: CodeStatsService = Depends(get_code_stats_service),
 ) -> PersonalCodeStatsResponse:
     """Get personal code statistics."""
     await verify_user_exists(user_id, db)
@@ -50,18 +55,24 @@ async def get_personal_code_stats(
     # Calculate days difference
     days_diff = (end_date - start_date).days + 1
 
-    # For now, return mock data
-    # In production, this would query actual git commit statistics
-    import random
+    # Get real statistics from database
+    stats = await code_stats_service.calculate_code_stats(
+        db=db,
+        user_id=user_id,
+        project_id=None,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
-    total_commits = random.randint(10, 200)
+    # Calculate average commits per day
+    avg_commits_per_day = round(stats.total_commits / days_diff, 2) if days_diff > 0 else 0.0
 
     return PersonalCodeStatsResponse(
-        total_commits=total_commits,
-        total_prs=random.randint(5, 50),
-        lines_added=random.randint(1000, 50000),
-        lines_deleted=random.randint(100, 10000),
-        avg_commits_per_day=round(total_commits / days_diff, 2),
+        total_commits=stats.total_commits,
+        total_prs=0,  # PR data not tracked in current model
+        lines_added=stats.total_additions,
+        lines_deleted=stats.total_deletions,
+        avg_commits_per_day=avg_commits_per_day,
     )
 
 
@@ -71,6 +82,7 @@ async def get_personal_token_stats(
     start_date: date | None = Query(None, description="开始日期"),
     end_date: date | None = Query(None, description="结束日期"),
     db: AsyncSession = Depends(get_db),
+    token_stats_service: TokenStatsService = Depends(get_token_stats_service),
 ) -> PersonalTokenStatsResponse:
     """Get personal token usage statistics."""
     await verify_user_exists(user_id, db)
@@ -84,19 +96,27 @@ async def get_personal_token_stats(
     # Calculate days difference
     days_diff = (end_date - start_date).days + 1
 
-    # For now, return mock data
-    # In production, this would query actual token usage statistics
-    import random
+    # Get real token usage from database
+    token_summary = await token_stats_service.get_user_token_usage(
+        db=db,
+        user_id=user_id,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
-    prompt_tokens = random.randint(10000, 500000)
-    completion_tokens = random.randint(5000, 200000)
-    total_tokens = prompt_tokens + completion_tokens
+    # Split total tokens into prompt/completion (60/40 split as estimate)
+    total_tokens = token_summary.total_tokens
+    prompt_tokens = int(total_tokens * 0.6)
+    completion_tokens = total_tokens - prompt_tokens
+
+    # Calculate average tokens per day
+    avg_tokens_per_day = round(total_tokens / days_diff, 2) if days_diff > 0 else 0.0
 
     return PersonalTokenStatsResponse(
         total_tokens=total_tokens,
         prompt_tokens=prompt_tokens,
         completion_tokens=completion_tokens,
-        avg_tokens_per_day=round(total_tokens / days_diff, 2),
+        avg_tokens_per_day=avg_tokens_per_day,
     )
 
 
@@ -105,6 +125,8 @@ async def get_personal_bug_rate(
     user_id: int = Query(..., description="用户ID"),
     project_id: int | None = Query(None, description="项目ID（可选）"),
     db: AsyncSession = Depends(get_db),
+    bug_stats_service: BugStatsService = Depends(get_bug_stats_service),
+    code_stats_service: CodeStatsService = Depends(get_code_stats_service),
 ) -> PersonalBugRateResponse:
     """Get personal bug rate statistics."""
     await verify_user_exists(user_id, db)
@@ -120,20 +142,37 @@ async def get_personal_bug_rate(
                 detail=f"Project with ID {project_id} not found",
             )
 
-    # For now, return mock data
-    # In production, this would query actual bug statistics from Zendao
-    import random
+    # Get real bug statistics from database
+    end_date = date.today()
+    start_date = end_date - timedelta(days=29)
 
-    total_bugs = random.randint(0, 20)
-    critical_bugs = random.randint(0, min(5, total_bugs))
-    resolved_bugs = random.randint(0, total_bugs)
+    bug_stats = await bug_stats_service.get_bug_stats_by_user(
+        db=db,
+        user_id=user_id,
+        start_date=start_date,
+        end_date=end_date,
+    )
 
-    # Calculate bug rate (bugs per 1000 lines of code, mock calculation)
-    bug_rate = round(total_bugs * random.uniform(0.1, 1.0), 2)
+    # Calculate bug rate (bugs per 1000 lines of code)
+    # Estimate lines of code from commits (assuming 100 lines per commit on average)
+    code_stats = await code_stats_service.calculate_code_stats(
+        db=db,
+        user_id=user_id,
+        project_id=project_id,
+        start_date=start_date,
+        end_date=end_date,
+    )
+
+    estimated_lines = code_stats.total_additions
+    bug_rate = (
+        round((bug_stats.total_bugs / estimated_lines) * 1000, 2)
+        if estimated_lines > 0
+        else 0.0
+    )
 
     return PersonalBugRateResponse(
-        total_bugs=total_bugs,
-        critical_bugs=critical_bugs,
+        total_bugs=bug_stats.total_bugs,
+        critical_bugs=bug_stats.critical_bugs,
         bug_rate=bug_rate,
-        resolved_bugs=resolved_bugs,
+        resolved_bugs=bug_stats.resolved_bugs,
     )

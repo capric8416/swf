@@ -3,6 +3,18 @@
 import structlog
 
 
+def get_logger(name: str):
+    """Get a structured logger instance.
+
+    Args:
+        name: The name of the logger (typically __name__).
+
+    Returns:
+        A structlog logger instance.
+    """
+    return structlog.get_logger(name)
+
+
 def setup_logging() -> None:
     """Setup structured logging."""
     structlog.configure(

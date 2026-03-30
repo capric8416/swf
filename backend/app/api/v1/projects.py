@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import get_current_user, require_admin_permission
 from app.db.base import get_db
 from app.db.models import Project, ProjectMember, User
 from app.schemas.project import (
@@ -75,6 +76,7 @@ async def list_projects(
 async def create_project(
     project_data: ProjectCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin_permission),
 ) -> ProjectInDB:
     """Create a new project."""
     # Check for duplicate code
@@ -146,6 +148,7 @@ async def update_project(
     project_id: int,
     project_data: ProjectUpdate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin_permission),
 ) -> ProjectInDB:
     """Update an existing project."""
     # Get existing project
@@ -186,6 +189,7 @@ async def update_project(
 async def delete_project(
     project_id: int,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin_permission),
 ) -> None:
     """Delete a project."""
     result = await db.execute(select(Project).where(Project.id == project_id))
@@ -261,6 +265,7 @@ async def add_project_member(
     project_id: int,
     member_data: ProjectMemberCreate,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin_permission),
 ) -> ProjectMemberResponse:
     """Add a member to a project."""
     # Check project exists

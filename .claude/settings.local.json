@@ -17,7 +17,21 @@
       "Bash(cat *)",
       "Bash(tree *)",
       "Bash(grep *)",
-      "Bash(curl *)"
+      "Bash(curl *)",
+      "Bash(pip install:*)",
+      "Bash(npx vue-tsc:*)",
+      "Bash(tee /e/code/LLM/workspace/swf/.worktrees/database-impl/backend/test_full_results.txt)",
+      "Bash(done)",
+      "Bash(venv/Scripts/alembic upgrade:*)",
+      "Bash(xargs kill:*)",
+      "Bash(venv/Scripts/pytest tests/ -v --tb=short)",
+      "Bash(venv/Scripts/pytest tests/test_auth_api.py -v --tb=short)",
+      "Bash(venv/Scripts/pytest tests/ --tb=line -q)",
+      "Bash(venv/Scripts/pytest tests/test_validators.py -v --tb=short 2>&1)",
+      "Bash(find backend/tests -name \"*.py\" -exec basename {})",
+      "Bash(pytest --tb=short)",
+      "Read(//e/code/LLM/workspace/swf/.claude/worktrees/agent-a61260f1/backend/app/**)",
+      "Read(//e/code/LLM/workspace/swf/.claude/worktrees/agent-a61260f1/backend/app/api/**)"
     ]
   }
 }

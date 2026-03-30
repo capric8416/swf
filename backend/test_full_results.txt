@@ -1,0 +1,380 @@
+============================= test session starts =============================
+platform win32 -- Python 3.14.2, pytest-9.0.2, pluggy-1.6.0 -- C:\Python314\python.exe
+cachedir: .pytest_cache
+rootdir: E:\code\LLM\workspace\swf\.worktrees\database-impl\backend
+configfile: pyproject.toml
+plugins: anyio-4.13.0, Faker-40.11.1, asyncio-1.3.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 216 items
+
+backend\tests\test_auth_api.py::TestLoginEndpoint::test_login_with_valid_credentials PASSED [  0%]
+backend\tests\test_auth_api.py::TestLoginEndpoint::test_login_with_invalid_credentials PASSED [  0%]
+backend\tests\test_auth_api.py::TestLoginEndpoint::test_login_with_missing_username PASSED [  1%]
+backend\tests\test_auth_api.py::TestLoginEndpoint::test_login_with_missing_password PASSED [  1%]
+backend\tests\test_auth_api.py::TestRefreshEndpoint::test_refresh_with_valid_token PASSED [  2%]
+backend\tests\test_auth_api.py::TestRefreshEndpoint::test_refresh_with_invalid_token PASSED [  2%]
+backend\tests\test_auth_api.py::TestRefreshEndpoint::test_refresh_with_missing_token PASSED [  3%]
+backend\tests\test_auth_api.py::TestLogoutEndpoint::test_logout_with_valid_tokens PASSED [  3%]
+backend\tests\test_auth_api.py::TestLogoutEndpoint::test_logout_without_token PASSED [  4%]
+backend\tests\test_auth_api.py::TestLogoutEndpoint::test_logout_with_invalid_token PASSED [  4%]
+backend\tests\test_auth_api.py::TestLogoutEndpoint::test_logout_with_only_access_token PASSED [  5%]
+backend\tests\test_auth_api.py::TestMeEndpoint::test_get_current_user_with_valid_token PASSED [  5%]
+backend\tests\test_auth_api.py::TestMeEndpoint::test_get_current_user_without_token PASSED [  6%]
+backend\tests\test_auth_api.py::TestMeEndpoint::test_get_current_user_with_invalid_token PASSED [  6%]
+backend\tests\test_auth_api.py::TestMeEndpoint::test_get_current_user_with_expired_token PASSED [  6%]
+backend\tests\test_auth_api.py::TestMeEndpoint::test_get_current_user_with_inactive_user PASSED [  7%]
+backend\tests\test_auth_service.py::TestAuthenticateUser::test_authenticate_user_with_valid_credentials PASSED [  7%]
+backend\tests\test_auth_service.py::TestAuthenticateUser::test_authenticate_user_with_invalid_password PASSED [  8%]
+backend\tests\test_auth_service.py::TestAuthenticateUser::test_authenticate_user_with_nonexistent_username PASSED [  8%]
+backend\tests\test_auth_service.py::TestAuthenticateUser::test_authenticate_user_updates_last_login PASSED [  9%]
+backend\tests\test_auth_service.py::TestGetUserById::test_get_user_by_id_with_existing_user PASSED [  9%]
+backend\tests\test_auth_service.py::TestGetUserById::test_get_user_by_id_with_nonexistent_user PASSED [ 10%]
+backend\tests\test_auth_service.py::TestValidateToken::test_validate_token_with_valid_token PASSED [ 10%]
+backend\tests\test_auth_service.py::TestValidateToken::test_validate_token_with_invalid_token PASSED [ 11%]
+backend\tests\test_auth_service.py::TestValidateToken::test_validate_token_with_blacklisted_token PASSED [ 11%]
+backend\tests\test_auth_service.py::TestLoginUser::test_login_user_returns_tokens PASSED [ 12%]
+backend\tests\test_auth_service.py::TestLoginUser::test_login_user_returns_none_for_invalid_credentials PASSED [ 12%]
+backend\tests\test_auth_service.py::TestLoginUser::test_login_user_tokens_contain_user_data PASSED [ 12%]
+backend\tests\test_auth_service.py::TestRefreshAccessToken::test_refresh_access_token_returns_new_token PASSED [ 13%]
+backend\tests\test_auth_service.py::TestRefreshAccessToken::test_refresh_access_token_with_invalid_token PASSED [ 13%]
+backend\tests\test_auth_service.py::TestRefreshAccessToken::test_refresh_access_token_for_nonexistent_user PASSED [ 14%]
+backend\tests\test_auth_service.py::TestRefreshAccessToken::test_refresh_access_token_for_inactive_user PASSED [ 14%]
+backend\tests\test_auth_service.py::TestRefreshAccessToken::test_refresh_access_token_with_blacklisted_token PASSED [ 15%]
+backend\tests\test_auth_service.py::TestLogout::test_logout_with_valid_tokens PASSED [ 15%]
+backend\tests\test_auth_service.py::TestLogout::test_logout_with_only_access_token PASSED [ 16%]
+backend\tests\test_auth_service.py::TestLogout::test_logout_blacklist_failure PASSED [ 16%]
+backend\tests\test_bug_stats_service.py::TestGetBugStatsByUser::test_get_bug_stats_by_user_success PASSED [ 17%]
+backend\tests\test_bug_stats_service.py::TestGetBugStatsByUser::test_get_bug_stats_by_user_empty PASSED [ 17%]
+backend\tests\test_bug_stats_service.py::TestGetBugStatsByProject::test_get_bug_stats_by_project_success PASSED [ 18%]
+backend\tests\test_bug_stats_service.py::TestGetBugStatsByProject::test_get_bug_stats_by_project_empty PASSED [ 18%]
+backend\tests\test_bug_stats_service.py::TestCalculateBugRate::test_calculate_bug_rate PASSED [ 18%]
+backend\tests\test_bug_stats_service.py::TestCalculateBugRate::test_calculate_bug_rate_empty PASSED [ 19%]
+backend\tests\test_bug_stats_service.py::TestGetBugTrends::test_get_bug_trends PASSED [ 19%]
+backend\tests\test_bug_stats_service.py::TestGetBugTrends::test_get_bug_trends_empty PASSED [ 20%]
+backend\tests\test_bug_stats_service.py::TestGetUserBugSummary::test_get_user_bug_summary PASSED [ 20%]
+backend\tests\test_bug_stats_service.py::TestGetUserBugSummary::test_get_user_bug_summary_empty PASSED [ 21%]
+backend\tests\test_code_stats_service.py::TestGetUserCommits::test_get_user_commits_success PASSED [ 21%]
+backend\tests\test_code_stats_service.py::TestGetUserCommits::test_get_user_commits_empty PASSED [ 22%]
+backend\tests\test_code_stats_service.py::TestGetUserCommits::test_get_user_commits_date_range PASSED [ 22%]
+backend\tests\test_code_stats_service.py::TestGetProjectCommits::test_get_project_commits_success PASSED [ 23%]
+backend\tests\test_code_stats_service.py::TestCalculateCodeStats::test_calculate_code_stats_by_user PASSED [ 23%]
+backend\tests\test_code_stats_service.py::TestCalculateCodeStats::test_calculate_code_stats_by_project PASSED [ 24%]
+backend\tests\test_code_stats_service.py::TestCalculateCodeStats::test_calculate_code_stats_empty PASSED [ 24%]
+backend\tests\test_code_stats_service.py::TestGetLanguageDistribution::test_get_language_distribution PASSED [ 25%]
+backend\tests\test_code_stats_service.py::TestGetLanguageDistribution::test_get_language_distribution_empty PASSED [ 25%]
+backend\tests\test_code_stats_service.py::TestGetCommitTrends::test_get_commit_trends PASSED [ 25%]
+backend\tests\test_code_stats_service.py::TestGetCommitTrends::test_get_commit_trends_empty PASSED [ 26%]
+backend\tests\test_code_stats_service.py::TestGetUserCodeRanking::test_get_user_code_ranking PASSED [ 26%]
+backend\tests\test_code_stats_service.py::TestGetUserCodeRanking::test_get_user_code_ranking_empty PASSED [ 27%]
+backend\tests\test_dependencies.py::TestDatabaseDependency::test_get_db_yields_session PASSED [ 27%]
+backend\tests\test_dependencies.py::TestCurrentUserDependency::test_get_current_user_exists PASSED [ 28%]
+backend\tests\test_dependencies.py::TestCurrentUserDependency::test_get_current_active_user_exists PASSED [ 28%]
+backend\tests\test_dependencies.py::TestCurrentUserDependency::test_get_current_user_with_valid_token PASSED [ 29%]
+backend\tests\test_dependencies.py::TestCurrentUserDependency::test_get_current_user_without_credentials PASSED [ 29%]
+backend\tests\test_dependencies.py::TestCurrentUserDependency::test_get_current_user_with_invalid_token PASSED [ 30%]
+backend\tests\test_dependencies.py::TestCurrentUserDependency::test_get_current_user_with_nonexistent_user PASSED [ 30%]
+backend\tests\test_dependencies.py::TestCurrentUserDependency::test_get_current_active_user_with_active_user PASSED [ 31%]
+backend\tests\test_dependencies.py::TestCurrentUserDependency::test_get_current_active_user_with_inactive_user PASSED [ 31%]
+backend\tests\test_dependencies.py::TestPermissionDependencies::test_require_permission_exists PASSED [ 31%]
+backend\tests\test_dependencies.py::TestPermissionDependencies::test_require_permission_creates_dependency PASSED [ 32%]
+backend\tests\test_dependencies.py::TestPermissionDependencies::test_require_permission_with_super_admin PASSED [ 32%]
+backend\tests\test_dependencies.py::TestPermissionDependencies::test_require_permission_with_specific_permission PASSED [ 33%]
+backend\tests\test_dependencies.py::TestPermissionDependencies::test_require_permission_without_permission PASSED [ 33%]
+backend\tests\test_dependencies.py::TestCommonParameters::test_common_parameters_exists PASSED [ 34%]
+backend\tests\test_dependencies.py::TestCommonParameters::test_common_parameters_defaults PASSED [ 34%]
+backend\tests\test_dependencies.py::TestCommonParameters::test_common_parameters_custom_values PASSED [ 35%]
+backend\tests\test_exceptions.py::TestCustomExceptions::test_app_exception_exists PASSED [ 35%]
+backend\tests\test_exceptions.py::TestCustomExceptions::test_not_found_exception PASSED [ 36%]
+backend\tests\test_exceptions.py::TestCustomExceptions::test_validation_exception PASSED [ 36%]
+backend\tests\test_exceptions.py::TestCustomExceptions::test_auth_exception PASSED [ 37%]
+backend\tests\test_exceptions.py::TestCustomExceptions::test_permission_exception PASSED [ 37%]
+backend\tests\test_exceptions.py::TestExceptionHandlers::test_app_exception_response PASSED [ 37%]
+backend\tests\test_exceptions.py::TestExceptionHandlers::test_not_found_response PASSED [ 38%]
+backend\tests\test_exceptions.py::TestExceptionHandlers::test_validation_response PASSED [ 38%]
+backend\tests\test_exceptions.py::TestExceptionHandlers::test_auth_response PASSED [ 39%]
+backend\tests\test_exceptions.py::TestExceptionHandlers::test_permission_response PASSED [ 39%]
+backend\tests\test_models.py::TestUserModel::test_create_user PASSED     [ 40%]
+backend\tests\test_models.py::TestUserModel::test_user_unique_username PASSED [ 40%]
+backend\tests\test_models.py::TestUserModel::test_user_email_validation PASSED [ 41%]
+backend\tests\test_models.py::TestRoleModel::test_create_role PASSED     [ 41%]
+backend\tests\test_models.py::TestRoleModel::test_role_unique_name PASSED [ 42%]
+backend\tests\test_models.py::TestProjectModel::test_create_project PASSED [ 42%]
+backend\tests\test_models.py::TestProjectModel::test_project_stage_enum PASSED [ 43%]
+backend\tests\test_models.py::TestProjectMemberModel::test_create_project_member PASSED [ 43%]
+backend\tests\test_models.py::TestUserPlatformAccountModel::test_create_platform_account PASSED [ 43%]
+backend\tests\test_models.py::TestUserPlatformAccountModel::test_platform_enum_validation PASSED [ 44%]
+backend\tests\test_models_extended.py::TestUserAccountModel::test_create_user_account PASSED [ 44%]
+backend\tests\test_models_extended.py::TestUserAccountModel::test_user_account_unique_constraint PASSED [ 45%]
+backend\tests\test_models_extended.py::TestUserAccountModel::test_user_account_relationship PASSED [ 45%]
+backend\tests\test_models_extended.py::TestCodeCommitModel::test_create_code_commit PASSED [ 46%]
+backend\tests\test_models_extended.py::TestCodeCommitModel::test_code_commit_unique_constraint PASSED [ 46%]
+backend\tests\test_models_extended.py::TestCodeCommitModel::test_code_commit_relationships PASSED [ 47%]
+backend\tests\test_models_extended.py::TestTokenUsageModel::test_create_token_usage PASSED [ 47%]
+backend\tests\test_models_extended.py::TestTokenUsageModel::test_token_usage_unique_constraint PASSED [ 48%]
+backend\tests\test_models_extended.py::TestBugRecordModel::test_create_bug_record PASSED [ 48%]
+backend\tests\test_models_extended.py::TestBugRecordModel::test_bug_record_unique_zendao_id PASSED [ 49%]
+backend\tests\test_models_extended.py::TestBugRecordModel::test_bug_record_relationships PASSED [ 49%]
+backend\tests\test_models_extended.py::TestAISuggestionModel::test_create_ai_suggestion PASSED [ 50%]
+backend\tests\test_models_extended.py::TestAISuggestionModel::test_ai_suggestion_relationships PASSED [ 50%]
+backend\tests\test_models_extended.py::TestDataSourceModel::test_create_data_source PASSED [ 50%]
+backend\tests\test_models_extended.py::TestDataSourceModel::test_data_source_relationship PASSED [ 51%]
+backend\tests\test_models_extended.py::TestSyncTaskModel::test_create_sync_task PASSED [ 51%]
+backend\tests\test_models_extended.py::TestSyncTaskModel::test_sync_task_status_update PASSED [ 52%]
+backend\tests\test_models_extended.py::TestStatsSnapshotModel::test_create_stats_snapshot PASSED [ 52%]
+backend\tests\test_models_extended.py::TestStatsSnapshotModel::test_stats_snapshot_unique_constraint PASSED [ 53%]
+backend\tests\test_models_extended.py::TestStatsSnapshotModel::test_global_stats_snapshot PASSED [ 53%]
+backend\tests\test_models_extended.py::TestModelIntegration::test_user_with_all_relations PASSED [ 54%]
+backend\tests\test_models_extended.py::TestModelIntegration::test_project_with_all_relations PASSED [ 54%]
+backend\tests\test_projects_api.py::TestListProjects::test_list_projects_empty PASSED [ 55%]
+backend\tests\test_projects_api.py::TestListProjects::test_list_projects_with_data PASSED [ 55%]
+backend\tests\test_projects_api.py::TestListProjects::test_list_projects_pagination PASSED [ 56%]
+backend\tests\test_projects_api.py::TestListProjects::test_list_projects_filter_by_status PASSED [ 56%]
+backend\tests\test_projects_api.py::TestListProjects::test_list_projects_filter_by_stage PASSED [ 56%]
+backend\tests\test_projects_api.py::TestListProjects::test_list_projects_search PASSED [ 57%]
+backend\tests\test_projects_api.py::TestCreateProject::test_create_project_success PASSED [ 57%]
+backend\tests\test_projects_api.py::TestCreateProject::test_create_project_duplicate_code PASSED [ 58%]
+backend\tests\test_projects_api.py::TestCreateProject::test_create_project_invalid_data PASSED [ 58%]
+backend\tests\test_projects_api.py::TestCreateProject::test_create_project_missing_required PASSED [ 59%]
+backend\tests\test_projects_api.py::TestGetProject::test_get_project_success PASSED [ 59%]
+backend\tests\test_projects_api.py::TestGetProject::test_get_project_not_found PASSED [ 60%]
+backend\tests\test_projects_api.py::TestGetProject::test_get_project_invalid_id PASSED [ 60%]
+backend\tests\test_projects_api.py::TestUpdateProject::test_update_project_success PASSED [ 61%]
+backend\tests\test_projects_api.py::TestUpdateProject::test_update_project_not_found PASSED [ 61%]
+backend\tests\test_projects_api.py::TestUpdateProject::test_update_project_duplicate_code PASSED [ 62%]
+backend\tests\test_projects_api.py::TestDeleteProject::test_delete_project_success PASSED [ 62%]
+backend\tests\test_projects_api.py::TestDeleteProject::test_delete_project_not_found PASSED [ 62%]
+backend\tests\test_projects_api.py::TestListProjectMembers::test_list_project_members_empty PASSED [ 63%]
+backend\tests\test_projects_api.py::TestListProjectMembers::test_list_project_members_with_data PASSED [ 63%]
+backend\tests\test_projects_api.py::TestListProjectMembers::test_list_project_members_project_not_found PASSED [ 64%]
+backend\tests\test_projects_api.py::TestAddProjectMember::test_add_project_member_success PASSED [ 64%]
+backend\tests\test_projects_api.py::TestAddProjectMember::test_add_project_member_duplicate PASSED [ 65%]
+backend\tests\test_projects_api.py::TestAddProjectMember::test_add_project_member_invalid_user PASSED [ 65%]
+backend\tests\test_projects_api.py::TestAddProjectMember::test_add_project_member_project_not_found PASSED [ 66%]
+backend\tests\test_security.py::TestPasswordHashing::test_get_password_hash_returns_string PASSED [ 66%]
+backend\tests\test_security.py::TestPasswordHashing::test_get_password_hash_returns_different_hashes_for_same_password PASSED [ 67%]
+backend\tests\test_security.py::TestPasswordHashing::test_verify_password_with_correct_password PASSED [ 67%]
+backend\tests\test_security.py::TestPasswordHashing::test_verify_password_with_incorrect_password PASSED [ 68%]
+backend\tests\test_security.py::TestAccessToken::test_create_access_token_returns_string PASSED [ 68%]
+backend\tests\test_security.py::TestAccessToken::test_create_access_token_contains_correct_data PASSED [ 68%]
+backend\tests\test_security.py::TestAccessToken::test_create_access_token_has_expiration PASSED [ 69%]
+backend\tests\test_security.py::TestAccessToken::test_create_access_token_with_custom_expiry PASSED [ 69%]
+backend\tests\test_security.py::TestRefreshToken::test_create_refresh_token_returns_string PASSED [ 70%]
+backend\tests\test_security.py::TestRefreshToken::test_create_refresh_token_contains_correct_data PASSED [ 70%]
+backend\tests\test_security.py::TestRefreshToken::test_create_refresh_token_has_expiration PASSED [ 71%]
+backend\tests\test_security.py::TestRefreshToken::test_refresh_token_has_longer_expiry_than_access_token PASSED [ 71%]
+backend\tests\test_security.py::TestDecodeToken::test_decode_valid_token PASSED [ 72%]
+backend\tests\test_security.py::TestDecodeToken::test_decode_invalid_token_raises_error PASSED [ 72%]
+backend\tests\test_security.py::TestDecodeToken::test_decode_expired_token_raises_error PASSED [ 73%]
+backend\tests\test_security.py::TestDecodeToken::test_decode_token_with_wrong_secret_raises_error PASSED [ 73%]
+backend\tests\test_stats_global_api.py::TestTokenTrend::test_token_trend_success PASSED [ 74%]
+backend\tests\test_stats_global_api.py::TestTokenTrend::test_token_trend_with_date_range PASSED [ 74%]
+backend\tests\test_stats_global_api.py::TestActivityTrend::test_activity_trend_success PASSED [ 75%]
+backend\tests\test_stats_global_api.py::TestTopUsers::test_top_users_success PASSED [ 75%]
+backend\tests\test_stats_global_api.py::TestTopUsers::test_top_users_limit PASSED [ 75%]
+backend\tests\test_stats_global_api.py::TestTopUsers::test_top_users_invalid_limit PASSED [ 76%]
+backend\tests\test_stats_personal_api.py::TestPersonalCodeStats::test_personal_code_stats_success PASSED [ 76%]
+backend\tests\test_stats_personal_api.py::TestPersonalCodeStats::test_personal_code_stats_with_date_range PASSED [ 77%]
+backend\tests\test_stats_personal_api.py::TestPersonalCodeStats::test_personal_code_stats_user_not_found PASSED [ 77%]
+backend\tests\test_stats_personal_api.py::TestPersonalCodeStats::test_personal_code_stats_missing_user_id PASSED [ 78%]
+backend\tests\test_stats_personal_api.py::TestPersonalTokenStats::test_personal_token_stats_success PASSED [ 78%]
+backend\tests\test_stats_personal_api.py::TestPersonalTokenStats::test_personal_token_stats_user_not_found PASSED [ 79%]
+backend\tests\test_stats_personal_api.py::TestPersonalBugRate::test_personal_bug_rate_success PASSED [ 79%]
+backend\tests\test_stats_personal_api.py::TestPersonalBugRate::test_personal_bug_rate_with_project PASSED [ 80%]
+backend\tests\test_stats_personal_api.py::TestPersonalBugRate::test_personal_bug_rate_user_not_found PASSED [ 80%]
+backend\tests\test_stats_projects_api.py::TestProjectStatsOverview::test_project_stats_success PASSED [ 81%]
+backend\tests\test_stats_projects_api.py::TestProjectStatsOverview::test_project_stats_not_found PASSED [ 81%]
+backend\tests\test_stats_projects_api.py::TestProjectCodeRank::test_code_rank_success PASSED [ 81%]
+backend\tests\test_stats_projects_api.py::TestProjectCodeRank::test_code_rank_project_not_found PASSED [ 82%]
+backend\tests\test_stats_projects_api.py::TestProjectBugTrend::test_bug_trend_success PASSED [ 82%]
+backend\tests\test_stats_projects_api.py::TestProjectBugTrend::test_bug_trend_with_date_range PASSED [ 83%]
+backend\tests\test_stats_projects_api.py::TestProjectAIAdoption::test_ai_adoption_success PASSED [ 83%]
+backend\tests\test_stats_projects_api.py::TestProjectAIAdoption::test_ai_adoption_project_not_found PASSED [ 84%]
+backend\tests\test_sync_api.py::TestSyncGitLab::test_sync_gitlab_success PASSED [ 84%]
+backend\tests\test_sync_api.py::TestSyncGitLab::test_sync_gitlab_empty_body PASSED [ 85%]
+backend\tests\test_sync_api.py::TestSyncTrae::test_sync_trae_success PASSED [ 85%]
+backend\tests\test_sync_api.py::TestSyncZendao::test_sync_zendao_success PASSED [ 86%]
+backend\tests\test_sync_api.py::TestSyncTasks::test_list_sync_tasks PASSED [ 86%]
+backend\tests\test_sync_api.py::TestSyncTasks::test_list_sync_tasks_with_filter PASSED [ 87%]
+backend\tests\test_sync_api.py::TestSyncTasks::test_list_sync_tasks_pagination PASSED [ 87%]
+backend\tests\test_sync_api.py::TestSyncLogs::test_list_sync_logs PASSED [ 87%]
+backend\tests\test_sync_api.py::TestSyncLogs::test_list_sync_logs_with_task_id PASSED [ 88%]
+backend\tests\test_sync_api.py::TestSyncLogs::test_list_sync_logs_with_level PASSED [ 88%]
+backend\tests\test_token_stats_service.py::TestGetUserTokenUsage::test_get_user_token_usage_success PASSED [ 89%]
+backend\tests\test_token_stats_service.py::TestGetUserTokenUsage::test_get_user_token_usage_empty PASSED [ 89%]
+backend\tests\test_token_stats_service.py::TestGetProjectTokenUsage::test_get_project_token_usage_success PASSED [ 90%]
+backend\tests\test_token_stats_service.py::TestGetProjectTokenUsage::test_get_project_token_usage_empty PASSED [ 90%]
+backend\tests\test_token_stats_service.py::TestCalculateTokenTrends::test_calculate_token_trends PASSED [ 91%]
+backend\tests\test_token_stats_service.py::TestCalculateTokenTrends::test_calculate_token_trends_empty PASSED [ 91%]
+backend\tests\test_token_stats_service.py::TestGetCostAnalysis::test_get_cost_analysis PASSED [ 92%]
+backend\tests\test_token_stats_service.py::TestGetCostAnalysis::test_get_cost_analysis_empty PASSED [ 92%]
+backend\tests\test_token_stats_service.py::TestGetTopUsersByTokens::test_get_top_users_by_tokens PASSED [ 93%]
+backend\tests\test_token_stats_service.py::TestGetTopUsersByTokens::test_get_top_users_by_tokens_empty PASSED [ 93%]
+backend\tests\test_users_api.py::TestGetUsers::test_get_users_list FAILED [ 93%]
+backend\tests\test_users_api.py::TestGetUsers::test_get_users_without_auth PASSED [ 94%]
+backend\tests\test_users_api.py::TestCreateUser::test_create_user_success FAILED [ 94%]
+backend\tests\test_users_api.py::TestCreateUser::test_create_user_duplicate_username FAILED [ 95%]
+backend\tests\test_users_api.py::TestCreateUser::test_create_user_without_auth PASSED [ 95%]
+backend\tests\test_users_api.py::TestGetUser::test_get_user_by_id FAILED [ 96%]
+backend\tests\test_users_api.py::TestGetUser::test_get_user_not_found FAILED [ 96%]
+backend\tests\test_users_api.py::TestGetUser::test_get_user_without_auth PASSED [ 97%]
+backend\tests\test_users_api.py::TestUpdateUser::test_update_user_success FAILED [ 97%]
+backend\tests\test_users_api.py::TestUpdateUser::test_update_user_not_found FAILED [ 98%]
+backend\tests\test_users_api.py::TestUpdateUser::test_update_user_without_auth PASSED [ 98%]
+backend\tests\test_users_api.py::TestDeleteUser::test_delete_user_success FAILED [ 99%]
+backend\tests\test_users_api.py::TestDeleteUser::test_delete_user_not_found FAILED [ 99%]
+backend\tests\test_users_api.py::TestDeleteUser::test_delete_user_without_auth PASSED [100%]
+
+================================== FAILURES ===================================
+E   assert 401 == 200
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:44:22 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:44:22 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:71: assert 401 == 200
+E   assert 401 == 201
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:44:45 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:44:45 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:101: assert 401 == 201
+E   assert 401 == 400
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:44:58 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:44:58 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:134: assert 401 == 400
+E   assert 401 == 200
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:45:21 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:45:21 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:170: assert 401 == 200
+E   assert 401 == 404
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:45:34 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:45:34 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:183: assert 401 == 404
+E   assert 401 == 200
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:45:56 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:45:56 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:218: assert 401 == 200
+E   assert 401 == 404
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:46:09 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:46:09 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:235: assert 401 == 404
+E   assert 401 == 204
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:46:31 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:46:31 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:268: assert 401 == 204
+E   assert 401 == 404
+     +  where 401 = <Response [401 Unauthorized]>.status_code
+---------------------------- Captured stdout call -----------------------------
+2026-03-29 08:46:44 [error    ] Failed to check token blacklist: Error 22 connecting to localhost:6379. 远程计算机拒绝网络连接。.
+2026-03-29 08:46:44 [warning  ] Token validation failed: token is blacklisted
+E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_users_api.py:284: assert 401 == 404
+============================== warnings summary ===============================
+backend\app\api\v1\auth.py:57
+  E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\app\api\v1\auth.py:57: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserResponse(BaseModel):
+
+backend\app\api\v1\users.py:53
+  E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\app\api\v1\users.py:53: PydanticDeprecatedSince20: Support for class-based `config` is deprecated, use ConfigDict instead. Deprecated in Pydantic V2.0 to be removed in V3.0. See Pydantic V2 Migration Guide at https://errors.pydantic.dev/2.12/migration/
+    class UserResponse(BaseModel):
+
+tests/test_auth_api.py: 13 warnings
+tests/test_auth_service.py: 24 warnings
+tests/test_bug_stats_service.py: 45 warnings
+tests/test_code_stats_service.py: 72 warnings
+tests/test_dependencies.py: 18 warnings
+tests/test_models.py: 50 warnings
+tests/test_models_extended.py: 117 warnings
+tests/test_projects_api.py: 103 warnings
+tests/test_stats_personal_api.py: 12 warnings
+tests/test_stats_projects_api.py: 10 warnings
+tests/test_token_stats_service.py: 45 warnings
+tests/test_users_api.py: 32 warnings
+  C:\Users\xh\AppData\Roaming\Python\Python314\site-packages\sqlalchemy\sql\schema.py:3624: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    return util.wrap_callable(lambda ctx: fn(), fn)  # type: ignore
+
+tests/test_bug_stats_service.py::TestGetBugStatsByUser::test_get_bug_stats_by_user_success
+tests/test_bug_stats_service.py::TestGetBugStatsByProject::test_get_bug_stats_by_project_success
+tests/test_bug_stats_service.py::TestCalculateBugRate::test_calculate_bug_rate
+tests/test_bug_stats_service.py::TestGetBugTrends::test_get_bug_trends
+tests/test_bug_stats_service.py::TestGetUserBugSummary::test_get_user_bug_summary
+  E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_bug_stats_service.py:58: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    base_date = datetime.utcnow() - timedelta(days=5)
+
+tests/test_bug_stats_service.py::TestCalculateBugRate::test_calculate_bug_rate
+tests/test_bug_stats_service.py::TestCalculateBugRate::test_calculate_bug_rate_empty
+  E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\app\services\bug_stats_service.py:300: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    end_date = datetime.utcnow()
+
+tests/test_code_stats_service.py::TestGetUserCommits::test_get_user_commits_success
+tests/test_code_stats_service.py::TestGetUserCommits::test_get_user_commits_date_range
+tests/test_code_stats_service.py::TestGetProjectCommits::test_get_project_commits_success
+tests/test_code_stats_service.py::TestCalculateCodeStats::test_calculate_code_stats_by_user
+tests/test_code_stats_service.py::TestCalculateCodeStats::test_calculate_code_stats_by_project
+tests/test_code_stats_service.py::TestGetLanguageDistribution::test_get_language_distribution
+tests/test_code_stats_service.py::TestGetCommitTrends::test_get_commit_trends
+tests/test_code_stats_service.py::TestGetUserCodeRanking::test_get_user_code_ranking
+  E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_code_stats_service.py:56: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    base_date = datetime.utcnow() - timedelta(days=5)
+
+tests/test_exceptions.py::TestCustomExceptions::test_validation_exception
+  E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_exceptions.py:31: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    exc = ValidationException(field="email", message="Invalid email format")
+
+tests/test_exceptions.py::TestExceptionHandlers::test_validation_response
+  E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\tests\test_exceptions.py:90: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    raise ValidationException(field="email", message="Invalid email")
+
+tests/test_projects_api.py::TestCreateProject::test_create_project_invalid_data
+tests/test_projects_api.py::TestCreateProject::test_create_project_missing_required
+tests/test_projects_api.py::TestGetProject::test_get_project_invalid_id
+tests/test_stats_global_api.py::TestTopUsers::test_top_users_invalid_limit
+tests/test_stats_personal_api.py::TestPersonalCodeStats::test_personal_code_stats_missing_user_id
+  C:\Python314\Lib\asyncio\events.py:94: DeprecationWarning: 'HTTP_422_UNPROCESSABLE_ENTITY' is deprecated. Use 'HTTP_422_UNPROCESSABLE_CONTENT' instead.
+    self._context.run(self._callback, *self._args)
+
+tests/test_sync_api.py::TestSyncGitLab::test_sync_gitlab_success
+tests/test_sync_api.py::TestSyncGitLab::test_sync_gitlab_empty_body
+tests/test_sync_api.py::TestSyncTrae::test_sync_trae_success
+tests/test_sync_api.py::TestSyncZendao::test_sync_zendao_success
+  E:\code\LLM\workspace\swf\.worktrees\database-impl\backend\app\api\v1\sync.py:40: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    "created_at": datetime.utcnow(),
+
+tests/test_sync_api.py::TestSyncGitLab::test_sync_gitlab_success
+tests/test_sync_api.py::TestSyncGitLab::test_sync_gitlab_empty_body
+tests/test_sync_api.py::TestSyncTrae::test_sync_trae_success
+tests/test_sync_api.py::TestSyncZendao::test_sync_zendao_success
+  C:\Users\xh\AppData\Roaming\Python\Python314\site-packages\pydantic\main.py:250: DeprecationWarning: datetime.datetime.utcnow() is deprecated and scheduled for removal in a future version. Use timezone-aware objects to represent datetimes in UTC: datetime.datetime.now(datetime.UTC).
+    validated_self = self.__pydantic_validator__.validate_python(data, self_instance=self)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+=========================== short test summary info ===========================
+FAILED backend\tests\test_users_api.py::TestGetUsers::test_get_users_list - assert 401 == 200
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED backend\tests\test_users_api.py::TestCreateUser::test_create_user_success - assert 401 == 201
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED backend\tests\test_users_api.py::TestCreateUser::test_create_user_duplicate_username - assert 401 == 400
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED backend\tests\test_users_api.py::TestGetUser::test_get_user_by_id - assert 401 == 200
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED backend\tests\test_users_api.py::TestGetUser::test_get_user_not_found - assert 401 == 404
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED backend\tests\test_users_api.py::TestUpdateUser::test_update_user_success - assert 401 == 200
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED backend\tests\test_users_api.py::TestUpdateUser::test_update_user_not_found - assert 401 == 404
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED backend\tests\test_users_api.py::TestDeleteUser::test_delete_user_success - assert 401 == 204
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+FAILED backend\tests\test_users_api.py::TestDeleteUser::test_delete_user_not_found - assert 401 == 404
+ +  where 401 = <Response [401 Unauthorized]>.status_code
+========== 9 failed, 207 passed, 573 warnings in 2360.28s (0:39:20) ===========

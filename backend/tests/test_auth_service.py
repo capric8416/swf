@@ -4,10 +4,12 @@ TDD Red Phase: Write tests before implementation.
 """
 
 from datetime import datetime
+from unittest.mock import AsyncMock, patch
 
+import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import create_refresh_token, get_password_hash
+from app.core.security import create_access_token, create_refresh_token, get_password_hash
 from app.db.models import User
 
 
@@ -84,6 +86,86 @@ class TestAuthenticateUser:
         assert isinstance(result.last_login_at, datetime)
 
 
+class TestGetUserById:
+    """Tests for get_user_by_id function."""
+
+    async def test_get_user_by_id_with_existing_user(self, session: AsyncSession):
+        """Test getting an existing user by ID."""
+        from app.services.auth_service import get_user_by_id
+
+        # Create test user
+        user = User(
+            username="get_by_id_user",
+            email="getbyid@example.com",
+            password_hash=get_password_hash("testpass123"),
+            department="IT",
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+
+        result = await get_user_by_id(session, user.id)
+
+        assert result is not None
+        assert result.id == user.id
+        assert result.username == "get_by_id_user"
+
+    async def test_get_user_by_id_with_nonexistent_user(self, session: AsyncSession):
+        """Test getting a non-existent user returns None."""
+        from app.services.auth_service import get_user_by_id
+
+        result = await get_user_by_id(session, 99999)
+
+        assert result is None
+
+
+class TestValidateToken:
+    """Tests for validate_token function."""
+
+    async def test_validate_token_with_valid_token(self, session: AsyncSession):
+        """Test validating a valid token returns payload."""
+        from app.services.auth_service import validate_token
+
+        # Create test user
+        user = User(
+            username="validate_token_user",
+            email="validate@example.com",
+            password_hash=get_password_hash("testpass123"),
+            department="IT",
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+
+        token = create_access_token({"sub": str(user.id), "username": user.username})
+
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=False)):
+            result = await validate_token(token)
+
+        assert result is not None
+        assert result["sub"] == str(user.id)
+        assert result["username"] == user.username
+
+    async def test_validate_token_with_invalid_token(self):
+        """Test validating an invalid token returns None."""
+        from app.services.auth_service import validate_token
+
+        result = await validate_token("invalid.token.here")
+
+        assert result is None
+
+    async def test_validate_token_with_blacklisted_token(self):
+        """Test validating a blacklisted token returns None."""
+        from app.services.auth_service import validate_token
+
+        token = create_access_token({"sub": "1", "username": "test"})
+
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=True)):
+            result = await validate_token(token)
+
+        assert result is None
+
+
 class TestLoginUser:
     """Tests for login_user function."""
 
@@ -120,7 +202,8 @@ class TestLoginUser:
 
     async def test_login_user_tokens_contain_user_data(self, session: AsyncSession):
         """Test that tokens contain correct user data."""
-        from app.services.auth_service import decode_token, login_user
+        from app.core.security import decode_token
+        from app.services.auth_service import login_user
 
         # Create test user
         user = User(
@@ -152,7 +235,8 @@ class TestRefreshAccessToken:
 
     async def test_refresh_access_token_returns_new_token(self, session: AsyncSession):
         """Test refreshing a valid refresh token returns new access token."""
-        from app.services.auth_service import decode_token, refresh_access_token
+        from app.core.security import decode_token
+        from app.services.auth_service import refresh_access_token
 
         # Create test user
         user = User(
@@ -167,7 +251,8 @@ class TestRefreshAccessToken:
 
         refresh_token = create_refresh_token({"sub": str(user.id)})
 
-        result = await refresh_access_token(session, refresh_token)
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=False)):
+            result = await refresh_access_token(session, refresh_token)
 
         assert result is not None
         assert "access_token" in result
@@ -193,7 +278,8 @@ class TestRefreshAccessToken:
 
         refresh_token = create_refresh_token({"sub": "99999"})
 
-        result = await refresh_access_token(session, refresh_token)
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=False)):
+            result = await refresh_access_token(session, refresh_token)
 
         assert result is None
 
@@ -214,6 +300,67 @@ class TestRefreshAccessToken:
 
         refresh_token = create_refresh_token({"sub": str(user.id)})
 
-        result = await refresh_access_token(session, refresh_token)
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=False)):
+            result = await refresh_access_token(session, refresh_token)
 
         assert result is None
+
+    async def test_refresh_access_token_with_blacklisted_token(self, session: AsyncSession):
+        """Test refreshing with blacklisted token returns None."""
+        from app.services.auth_service import refresh_access_token
+
+        # Create test user
+        user = User(
+            username="refresh_blacklisted_user",
+            email="refresh_blacklisted@example.com",
+            password_hash=get_password_hash("testpass123"),
+            department="IT",
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+
+        refresh_token = create_refresh_token({"sub": str(user.id)})
+
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=True)):
+            result = await refresh_access_token(session, refresh_token)
+
+        assert result is None
+
+
+class TestLogout:
+    """Tests for logout function."""
+
+    async def test_logout_with_valid_tokens(self):
+        """Test logout with valid tokens blacklists them."""
+        from app.services.auth_service import logout
+
+        access_token = create_access_token({"sub": "1"})
+        refresh_token = create_refresh_token({"sub": "1"})
+
+        with patch("app.services.auth_service.TokenBlacklist.blacklist_token", AsyncMock(return_value=True)):
+            result = await logout(access_token, refresh_token)
+
+        assert result is True
+
+    async def test_logout_with_only_access_token(self):
+        """Test logout with only access token."""
+        from app.services.auth_service import logout
+
+        access_token = create_access_token({"sub": "1"})
+
+        with patch("app.services.auth_service.TokenBlacklist.blacklist_token", AsyncMock(return_value=True)):
+            result = await logout(access_token)
+
+        assert result is True
+
+    async def test_logout_blacklist_failure(self):
+        """Test logout when blacklisting fails."""
+        from app.services.auth_service import logout
+
+        access_token = create_access_token({"sub": "1"})
+
+        with patch("app.services.auth_service.TokenBlacklist.blacklist_token", AsyncMock(return_value=False)):
+            result = await logout(access_token)
+
+        assert result is False

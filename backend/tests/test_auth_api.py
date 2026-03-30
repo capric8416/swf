@@ -3,14 +3,17 @@
 TDD Red Phase: Write tests before implementation.
 """
 
-from datetime import UTC
+from datetime import UTC, datetime, timedelta
+from unittest.mock import AsyncMock, patch
 
 import pytest
 from httpx import ASGITransport, AsyncClient
+from jose import jwt
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.config import settings
 from app.core.dependencies import get_db
-from app.core.security import create_access_token, get_password_hash
+from app.core.security import create_access_token, create_refresh_token, get_password_hash
 from app.db.models import User
 from app.main import app
 
@@ -54,7 +57,9 @@ class TestLoginEndpoint:
         )
 
         assert response.status_code == 200
-        data = response.json()
+        result = response.json()
+        assert result["code"] == 200
+        data = result["data"]
         assert "access_token" in data
         assert "refresh_token" in data
         assert data["token_type"] == "bearer"
@@ -67,7 +72,8 @@ class TestLoginEndpoint:
         )
 
         assert response.status_code == 401
-        assert "detail" in response.json()
+        result = response.json()
+        assert result["code"] == 401
 
     async def test_login_with_missing_username(self, client: AsyncClient):
         """Test login with missing username returns 422."""
@@ -104,16 +110,18 @@ class TestRefreshEndpoint:
         session.add(user)
         await session.commit()
 
-        from app.core.security import create_refresh_token
         refresh_token = create_refresh_token({"sub": str(user.id)})
 
-        response = await client.post(
-            "/api/v1/auth/refresh",
-            json={"refresh_token": refresh_token},
-        )
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=False)):
+            response = await client.post(
+                "/api/v1/auth/refresh",
+                json={"refresh_token": refresh_token},
+            )
 
         assert response.status_code == 200
-        data = response.json()
+        result = response.json()
+        assert result["code"] == 200
+        data = result["data"]
         assert "access_token" in data
         assert data["token_type"] == "bearer"
 
@@ -125,7 +133,8 @@ class TestRefreshEndpoint:
         )
 
         assert response.status_code == 401
-        assert "detail" in response.json()
+        result = response.json()
+        assert result["code"] == 401
 
     async def test_refresh_with_missing_token(self, client: AsyncClient):
         """Test refresh with missing token returns 422."""
@@ -135,6 +144,84 @@ class TestRefreshEndpoint:
         )
 
         assert response.status_code == 422
+
+
+class TestLogoutEndpoint:
+    """Tests for POST /api/v1/auth/logout endpoint."""
+
+    async def test_logout_with_valid_tokens(self, client: AsyncClient, session: AsyncSession):
+        """Test logout with valid tokens returns success."""
+        # Create test user
+        user = User(
+            username="api_logout_user",
+            email="api_logout@example.com",
+            password_hash=get_password_hash("testpass123"),
+            department="IT",
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+
+        access_token = create_access_token({"sub": str(user.id), "username": user.username})
+        refresh_token = create_refresh_token({"sub": str(user.id)})
+
+        with patch("app.services.auth_service.TokenBlacklist.blacklist_token", AsyncMock(return_value=True)):
+            response = await client.post(
+                "/api/v1/auth/logout",
+                headers={"Authorization": f"Bearer {access_token}"},
+                json={"refresh_token": refresh_token},
+            )
+
+        assert response.status_code == 200
+        result = response.json()
+        assert result["code"] == 200
+
+    async def test_logout_without_token(self, client: AsyncClient):
+        """Test logout without token returns 401."""
+        response = await client.post(
+            "/api/v1/auth/logout",
+            json={},
+        )
+
+        assert response.status_code == 401
+
+    async def test_logout_with_invalid_token(self, client: AsyncClient):
+        """Test logout with invalid token still succeeds (token is blacklisted regardless)."""
+        # The logout endpoint accepts any token and blacklists it
+        # This is intentional - you should be able to logout with any token
+        with patch("app.services.auth_service.TokenBlacklist.blacklist_token", AsyncMock(return_value=True)):
+            response = await client.post(
+                "/api/v1/auth/logout",
+                headers={"Authorization": "Bearer invalid.token"},
+                json={},
+            )
+
+        # Logout succeeds even with invalid token (token gets blacklisted)
+        assert response.status_code == 200
+
+    async def test_logout_with_only_access_token(self, client: AsyncClient, session: AsyncSession):
+        """Test logout with only access token (no refresh token)."""
+        # Create test user
+        user = User(
+            username="api_logout_access_only",
+            email="api_logout_access@example.com",
+            password_hash=get_password_hash("testpass123"),
+            department="IT",
+            is_active=True,
+        )
+        session.add(user)
+        await session.commit()
+
+        access_token = create_access_token({"sub": str(user.id), "username": user.username})
+
+        with patch("app.services.auth_service.TokenBlacklist.blacklist_token", AsyncMock(return_value=True)):
+            response = await client.post(
+                "/api/v1/auth/logout",
+                headers={"Authorization": f"Bearer {access_token}"},
+                json={},
+            )
+
+        assert response.status_code == 200
 
 
 class TestMeEndpoint:
@@ -155,13 +242,16 @@ class TestMeEndpoint:
 
         token = create_access_token({"sub": str(user.id), "username": user.username})
 
-        response = await client.get(
-            "/api/v1/auth/me",
-            headers={"Authorization": f"Bearer {token}"},
-        )
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=False)):
+            response = await client.get(
+                "/api/v1/auth/me",
+                headers={"Authorization": f"Bearer {token}"},
+            )
 
         assert response.status_code == 200
-        data = response.json()
+        result = response.json()
+        assert result["code"] == 200
+        data = result["data"]
         assert data["id"] == user.id
         assert data["username"] == user.username
         assert data["email"] == user.email
@@ -184,12 +274,6 @@ class TestMeEndpoint:
 
     async def test_get_current_user_with_expired_token(self, client: AsyncClient):
         """Test getting current user with expired token returns 401."""
-        from datetime import datetime, timedelta
-
-        from jose import jwt
-
-        from app.core.config import settings
-
         # Create an expired token manually
         expire = datetime.now(UTC) - timedelta(minutes=1)
         data = {"sub": "1", "username": "testuser", "exp": expire}
@@ -201,3 +285,26 @@ class TestMeEndpoint:
         )
 
         assert response.status_code == 401
+
+    async def test_get_current_user_with_inactive_user(self, client: AsyncClient, session: AsyncSession):
+        """Test getting current user with inactive user returns 403."""
+        # Create inactive test user
+        user = User(
+            username="api_inactive_user",
+            email="api_inactive@example.com",
+            password_hash=get_password_hash("testpass123"),
+            department="IT",
+            is_active=False,
+        )
+        session.add(user)
+        await session.commit()
+
+        token = create_access_token({"sub": str(user.id), "username": user.username})
+
+        with patch("app.services.auth_service.TokenBlacklist.is_blacklisted", AsyncMock(return_value=False)):
+            response = await client.get(
+                "/api/v1/auth/me",
+                headers={"Authorization": f"Bearer {token}"},
+            )
+
+        assert response.status_code == 403

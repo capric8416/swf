@@ -10,7 +10,21 @@ from sqlalchemy.pool import NullPool
 from app.db.base import Base
 
 # Import all models to register them with Base metadata
-from app.db.models import Project, ProjectMember, Role, User, UserPlatformAccount  # noqa: F401
+from app.db.models import (  # noqa: F401
+    AISuggestion,
+    BugRecord,
+    CodeCommit,
+    DataSource,
+    Project,
+    ProjectMember,
+    Role,
+    StatsSnapshot,
+    SyncTask,
+    TokenUsage,
+    User,
+    UserAccount,
+    UserPlatformAccount,
+)
 
 
 @pytest_asyncio.fixture(scope="function")

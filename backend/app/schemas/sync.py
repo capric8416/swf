@@ -5,6 +5,15 @@ from datetime import date, datetime
 from pydantic import BaseModel, ConfigDict, Field
 
 
+class SyncTaskCreate(BaseModel):
+    """Schema for creating a sync task."""
+
+    source_type: str = Field(..., description="同步来源类型")
+    project_ids: list[int] | None = Field(None, description="项目ID列表（为空则同步所有）")
+    start_date: date | None = Field(None, description="开始日期")
+    end_date: date | None = Field(None, description="结束日期")
+
+
 class SyncGitLabRequest(BaseModel):
     """Schema for GitLab sync request."""
 

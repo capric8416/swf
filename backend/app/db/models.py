@@ -3,7 +3,9 @@
 TDD Green Phase: Implement models to make tests pass.
 """
 
-from datetime import datetime
+from datetime import date, datetime
+from decimal import Decimal
+from typing import List, Optional
 
 from sqlalchemy import (
     JSON,
@@ -14,10 +16,12 @@ from sqlalchemy import (
     ForeignKey,
     Index,
     Integer,
+    LargeBinary,
+    Numeric,
     String,
     Text,
 )
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.db.base import Base
 
@@ -27,21 +31,42 @@ class User(Base):
 
     __tablename__ = "users"
 
-    id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(50), unique=True, nullable=False, index=True)
-    email = Column(String(100), unique=True, nullable=False, index=True)
-    password_hash = Column(String(255), nullable=False)
-    department = Column(String(50), nullable=False)
-    role_id = Column(Integer, ForeignKey("roles.id"), nullable=True)
-    is_active = Column(Boolean, default=True, nullable=False)
-    last_login_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    username: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    email: Mapped[str] = mapped_column(String(100), unique=True, nullable=False, index=True)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    department: Mapped[str] = mapped_column(String(50), nullable=False)
+    role_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("roles.id"), nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    last_login_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
-    role = relationship("Role", back_populates="users")
-    project_memberships = relationship("ProjectMember", back_populates="user")
-    platform_accounts = relationship("UserPlatformAccount", back_populates="user")
+    role: Mapped[Optional["Role"]] = relationship("Role", back_populates="users")
+    project_memberships: Mapped[List["ProjectMember"]] = relationship(
+        "ProjectMember", back_populates="user"
+    )
+    platform_accounts: Mapped[List["UserAccount"]] = relationship(
+        "UserAccount", back_populates="user", cascade="all, delete-orphan"
+    )
+    code_commits: Mapped[List["CodeCommit"]] = relationship(
+        "CodeCommit", back_populates="user", cascade="all, delete-orphan"
+    )
+    token_usage: Mapped[List["TokenUsage"]] = relationship(
+        "TokenUsage", back_populates="user", cascade="all, delete-orphan"
+    )
+    ai_suggestions: Mapped[List["AISuggestion"]] = relationship(
+        "AISuggestion", back_populates="user", cascade="all, delete-orphan"
+    )
+    assigned_bugs: Mapped[List["BugRecord"]] = relationship(
+        "BugRecord", foreign_keys="BugRecord.assignee_id", back_populates="assignee"
+    )
+    reported_bugs: Mapped[List["BugRecord"]] = relationship(
+        "BugRecord", foreign_keys="BugRecord.reporter_id", back_populates="reporter"
+    )
 
     def __repr__(self) -> str:
         return f"<User(id={self.id}, username={self.username})>"
@@ -52,15 +77,17 @@ class Role(Base):
 
     __tablename__ = "roles"
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(50), unique=True, nullable=False, index=True)
-    description = Column(String(200), nullable=True)
-    permissions = Column(JSON, default=list, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    description: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    permissions: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
-    users = relationship("User", back_populates="role")
+    users: Mapped[List["User"]] = relationship("User", back_populates="role")
 
     def __repr__(self) -> str:
         return f"<Role(id={self.id}, name={self.name})>"
@@ -75,20 +102,43 @@ class Project(Base):
     STAGE_ENUM = ["调研", "立项", "需求", "设计", "研发", "验收", "发布", "运维"]
     STATUS_ENUM = ["active", "archived", "cancelled"]
 
-    id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    code = Column(String(50), unique=True, nullable=False, index=True)
-    description = Column(Text, nullable=True)
-    stage = Column(String(20), nullable=False, default="研发")
-    status = Column(String(20), nullable=False, default="active")
-    manager_id = Column(Integer, ForeignKey("users.id"), nullable=True)
-    start_date = Column(Date, nullable=True)
-    end_date = Column(Date, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    code: Mapped[str] = mapped_column(String(50), unique=True, nullable=False, index=True)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    stage: Mapped[str] = mapped_column(String(20), nullable=False, default="研发")
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="active")
+    manager_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    gitlab_repo_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    gitlab_repo_url: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    zendao_project_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    zendao_project_key: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    start_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    end_date: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
-    members = relationship("ProjectMember", back_populates="project")
+    members: Mapped[List["ProjectMember"]] = relationship(
+        "ProjectMember", back_populates="project", cascade="all, delete-orphan"
+    )
+    code_commits: Mapped[List["CodeCommit"]] = relationship(
+        "CodeCommit", back_populates="project", cascade="all, delete-orphan"
+    )
+    token_usage: Mapped[List["TokenUsage"]] = relationship(
+        "TokenUsage", back_populates="project", cascade="all, delete-orphan"
+    )
+    bug_records: Mapped[List["BugRecord"]] = relationship(
+        "BugRecord", back_populates="project", cascade="all, delete-orphan"
+    )
+    ai_suggestions: Mapped[List["AISuggestion"]] = relationship(
+        "AISuggestion", back_populates="project", cascade="all, delete-orphan"
+    )
+    data_sources: Mapped[List["DataSource"]] = relationship(
+        "DataSource", back_populates="project", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Project(id={self.id}, code={self.code}, name={self.name})>"
@@ -99,15 +149,17 @@ class ProjectMember(Base):
 
     __tablename__ = "project_members"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    project_id = Column(Integer, ForeignKey("projects.id"), nullable=False)
-    role = Column(String(50), nullable=False, default="developer")
-    joined_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id: Mapped[int] = mapped_column(Integer, ForeignKey("projects.id"), nullable=False)
+    role: Mapped[str] = mapped_column(String(50), nullable=False, default="member")
+    joined_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    left_at: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
 
     # Relationships
-    user = relationship("User", back_populates="project_memberships")
-    project = relationship("Project", back_populates="members")
+    user: Mapped["User"] = relationship("User", back_populates="project_memberships")
+    project: Mapped["Project"] = relationship("Project", back_populates="members")
 
     # Indexes
     __table_args__ = (
@@ -118,28 +170,382 @@ class ProjectMember(Base):
         return f"<ProjectMember(id={self.id}, user_id={self.user_id}, project_id={self.project_id})>"
 
 
-class UserPlatformAccount(Base):
-    """User platform account mapping for external systems."""
+class UserAccount(Base):
+    """User account mapping for external systems with encrypted API tokens.
 
-    __tablename__ = "user_platform_accounts"
+    Replaces UserPlatformAccount with enhanced security features.
+    """
+
+    __tablename__ = "user_accounts"
 
     # Platform enum values
-    PLATFORM_ENUM = ["trae", "gitlab", "zendao"]
+    PLATFORM_ENUM = ["trae", "gitlab", "zendao", "ali_coding"]
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    platform = Column(String(50), nullable=False)
-    account = Column(String(100), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    platform: Mapped[str] = mapped_column(String(20), nullable=False)
+    account_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    account_name: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    api_token_encrypted: Mapped[Optional[bytes]] = mapped_column(LargeBinary, nullable=True)
+    is_default: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
 
     # Relationships
-    user = relationship("User", back_populates="platform_accounts")
+    user: Mapped["User"] = relationship("User", back_populates="platform_accounts")
 
     # Indexes
     __table_args__ = (
-        Index("idx_platform_account_user_platform", "user_id", "platform", unique=True),
+        Index("idx_user_accounts_user_platform", "user_id", "platform", unique=True),
+        Index("idx_user_accounts_user_id", "user_id"),
+        Index("idx_user_accounts_platform", "platform"),
     )
 
     def __repr__(self) -> str:
-        return f"<UserPlatformAccount(id={self.id}, platform={self.platform}, account={self.account})>"
+        return f"<UserAccount(id={self.id}, platform={self.platform}, account_id={self.account_id})>"
+
+
+class CodeCommit(Base):
+    """Code commit record for tracking developer contributions.
+
+    Partitioned by commit_time for performance with large datasets.
+    """
+
+    __tablename__ = "code_commits"
+
+    # Language enum values
+    LANGUAGE_ENUM = [
+        "python", "javascript", "typescript", "java", "go", "rust",
+        "c", "cpp", "csharp", "php", "ruby", "swift", "kotlin",
+        "scala", "sql", "shell", "html", "css", "other"
+    ]
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id: Mapped[int] = mapped_column(Integer, ForeignKey("projects.id"), nullable=False)
+    commit_hash: Mapped[str] = mapped_column(String(64), nullable=False)
+    additions: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    deletions: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    language: Mapped[str] = mapped_column(String(20), nullable=False)
+    file_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    commit_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    commit_time: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    is_ai_generated: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    ai_suggestion_ids: Mapped[Optional[List[int]]] = mapped_column(JSON, nullable=True)
+    branch_name: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="code_commits")
+    project: Mapped["Project"] = relationship("Project", back_populates="code_commits")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_code_commits_user_id", "user_id"),
+        Index("idx_code_commits_project_id", "project_id"),
+        Index("idx_code_commits_language", "language"),
+        Index("idx_code_commits_is_ai_generated", "is_ai_generated"),
+        Index("idx_code_commits_commit_time", "commit_time"),
+        Index("idx_code_commits_user_time", "user_id", "commit_time"),
+        Index("idx_code_commits_project_time", "project_id", "commit_time"),
+        Index("idx_code_commits_hash_project", "commit_hash", "project_id", unique=True),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<CodeCommit(id={self.id}, hash={self.commit_hash[:8]}, "
+            f"project_id={self.project_id}, user_id={self.user_id})>"
+        )
+
+
+class TokenUsage(Base):
+    """Token usage record for tracking AI platform consumption.
+
+    Partitioned by usage_date for performance with large datasets.
+    """
+
+    __tablename__ = "token_usage"
+
+    # Platform enum values
+    PLATFORM_ENUM = ["trae", "ali_coding", "cursor", "copilot"]
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("projects.id"), nullable=True
+    )
+    platform: Mapped[str] = mapped_column(String(20), nullable=False)
+    token_count: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    api_calls: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    usage_date: Mapped[date] = mapped_column(Date, nullable=False)
+    model: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    cost: Mapped[Optional[Decimal]] = mapped_column(Numeric(10, 4), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="token_usage")
+    project: Mapped[Optional["Project"]] = relationship("Project", back_populates="token_usage")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_token_usage_user_id", "user_id"),
+        Index("idx_token_usage_project_id", "project_id"),
+        Index("idx_token_usage_platform", "platform"),
+        Index("idx_token_usage_usage_date", "usage_date"),
+        Index("idx_token_usage_user_platform_date", "user_id", "platform", "usage_date", unique=True),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<TokenUsage(id={self.id}, user_id={self.user_id}, "
+            f"platform={self.platform}, tokens={self.token_count})>"
+        )
+
+
+class BugRecord(Base):
+    """Bug record for tracking issue resolution."""
+
+    __tablename__ = "bug_records"
+
+    # Severity enum values
+    SEVERITY_ENUM = ["critical", "major", "normal", "minor", "trivial"]
+    # Priority enum values
+    PRIORITY_ENUM = ["urgent", "high", "medium", "low"]
+    # Status enum values
+    STATUS_ENUM = ["new", "assigned", "active", "resolved", "closed", "rejected"]
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(Integer, ForeignKey("projects.id"), nullable=False)
+    assignee_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
+    reporter_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("users.id"), nullable=True
+    )
+    zendao_bug_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True, unique=True)
+    title: Mapped[str] = mapped_column(String(200), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    severity: Mapped[str] = mapped_column(String(20), nullable=False)
+    priority: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="new")
+    type: Mapped[str] = mapped_column(String(20), default="bug", nullable=False)
+    module: Mapped[Optional[str]] = mapped_column(String(100), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+    resolved_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    closed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    resolution: Mapped[Optional[str]] = mapped_column(String(200), nullable=True)
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project", back_populates="bug_records")
+    assignee: Mapped[Optional["User"]] = relationship(
+        "User", foreign_keys=[assignee_id], back_populates="assigned_bugs"
+    )
+    reporter: Mapped[Optional["User"]] = relationship(
+        "User", foreign_keys=[reporter_id], back_populates="reported_bugs"
+    )
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_bug_records_project_id", "project_id"),
+        Index("idx_bug_records_assignee_id", "assignee_id"),
+        Index("idx_bug_records_reporter_id", "reporter_id"),
+        Index("idx_bug_records_severity", "severity"),
+        Index("idx_bug_records_status", "status"),
+        Index("idx_bug_records_created_at", "created_at"),
+        Index("idx_bug_records_zendao_bug_id", "zendao_bug_id"),
+        Index("idx_bug_records_project_status_severity", "project_id", "status", "severity"),
+        Index("idx_bug_records_assignee_status", "assignee_id", "status"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<BugRecord(id={self.id}, title={self.title[:30]}, "
+            f"severity={self.severity}, status={self.status})>"
+        )
+
+
+class AISuggestion(Base):
+    """AI suggestion record for tracking AI-generated code suggestions."""
+
+    __tablename__ = "ai_suggestions"
+
+    # Suggestion type enum values
+    SUGGESTION_TYPE_ENUM = [
+        "code_completion", "code_generation", "refactoring", "bug_fix", "explanation"
+    ]
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.id"), nullable=False)
+    project_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("projects.id"), nullable=True
+    )
+    platform: Mapped[str] = mapped_column(String(20), nullable=False)
+    suggestion_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    language: Mapped[Optional[str]] = mapped_column(String(20), nullable=True)
+    file_path: Mapped[Optional[str]] = mapped_column(String(500), nullable=True)
+    line_number: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    token_cost: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    is_accepted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    accepted_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    commit_hash: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Relationships
+    user: Mapped["User"] = relationship("User", back_populates="ai_suggestions")
+    project: Mapped[Optional["Project"]] = relationship("Project", back_populates="ai_suggestions")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_ai_suggestions_user_id", "user_id"),
+        Index("idx_ai_suggestions_project_id", "project_id"),
+        Index("idx_ai_suggestions_platform", "platform"),
+        Index("idx_ai_suggestions_type", "suggestion_type"),
+        Index("idx_ai_suggestions_is_accepted", "is_accepted"),
+        Index("idx_ai_suggestions_created_at", "created_at"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<AISuggestion(id={self.id}, type={self.suggestion_type}, "
+            f"accepted={self.is_accepted})>"
+        )
+
+
+class DataSource(Base):
+    """Data source configuration for external integrations."""
+
+    __tablename__ = "data_sources"
+
+    # Source type enum values
+    SOURCE_TYPE_ENUM = ["gitlab", "zendao"]
+    # Sync frequency enum values
+    SYNC_FREQUENCY_ENUM = ["daily", "hourly", "realtime"]
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    project_id: Mapped[int] = mapped_column(Integer, ForeignKey("projects.id"), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    source_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    config: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    credentials_encrypted: Mapped[Optional[bytes]] = mapped_column(LargeBinary, nullable=True)
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    last_sync_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    sync_frequency: Mapped[str] = mapped_column(String(20), default="daily", nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=False
+    )
+
+    # Relationships
+    project: Mapped["Project"] = relationship("Project", back_populates="data_sources")
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_data_sources_project_id", "project_id"),
+        Index("idx_data_sources_source_type", "source_type"),
+        Index("idx_data_sources_is_active", "is_active"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<DataSource(id={self.id}, type={self.source_type}, "
+            f"name={self.source_name}, active={self.is_active})>"
+        )
+
+
+class SyncTask(Base):
+    """Sync task record for tracking data synchronization jobs.
+
+    Replaces in-memory storage with persistent database records.
+    """
+
+    __tablename__ = "sync_tasks"
+
+    # Task type enum values
+    TASK_TYPE_ENUM = ["full_sync", "incremental_sync", "config_sync"]
+    # Task status enum values
+    STATUS_ENUM = ["pending", "running", "completed", "failed", "cancelled"]
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    task_type: Mapped[str] = mapped_column(String(30), nullable=False)
+    source_type: Mapped[str] = mapped_column(String(20), nullable=False)
+    project_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("projects.id"), nullable=True
+    )
+    status: Mapped[str] = mapped_column(String(20), nullable=False, default="pending")
+    started_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    completed_at: Mapped[Optional[datetime]] = mapped_column(DateTime, nullable=True)
+    records_processed: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    records_failed: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    error_message: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    created_by: Mapped[Optional[str]] = mapped_column(String(50), nullable=True)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_sync_tasks_task_type", "task_type"),
+        Index("idx_sync_tasks_source_type", "source_type"),
+        Index("idx_sync_tasks_project_id", "project_id"),
+        Index("idx_sync_tasks_status", "status"),
+        Index("idx_sync_tasks_created_at", "created_at"),
+        Index("idx_sync_tasks_status_created", "status", "created_at"),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<SyncTask(id={self.id}, type={self.task_type}, "
+            f"status={self.status}, source={self.source_type})>"
+        )
+
+
+class StatsSnapshot(Base):
+    """Statistics snapshot for caching aggregated metrics.
+
+    Stores pre-computed statistics for fast dashboard rendering.
+    """
+
+    __tablename__ = "stats_snapshots"
+
+    # Snapshot type enum values
+    SNAPSHOT_TYPE_ENUM = ["global", "project", "personal"]
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    snapshot_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    snapshot_date: Mapped[date] = mapped_column(Date, nullable=False)
+    project_id: Mapped[Optional[int]] = mapped_column(
+        Integer, ForeignKey("projects.id"), nullable=True
+    )
+    user_id: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey("users.id"), nullable=True)
+    metrics: Mapped[dict] = mapped_column(JSON, default=dict, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, nullable=False)
+
+    # Indexes
+    __table_args__ = (
+        Index("idx_stats_snapshots_type", "snapshot_type"),
+        Index("idx_stats_snapshots_date", "snapshot_date"),
+        Index("idx_stats_snapshots_project_id", "project_id"),
+        Index("idx_stats_snapshots_user_id", "user_id"),
+        Index(
+            "idx_stats_snapshots_type_date_project_user",
+            "snapshot_type",
+            "snapshot_date",
+            "project_id",
+            "user_id",
+            unique=True,
+        ),
+    )
+
+    def __repr__(self) -> str:
+        return (
+            f"<StatsSnapshot(id={self.id}, type={self.snapshot_type}, "
+            f"date={self.snapshot_date})>"
+        )
+
+
+# Backwards compatibility alias
+UserPlatformAccount = UserAccount

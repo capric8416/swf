@@ -6,7 +6,9 @@ from uuid import uuid4
 from fastapi import APIRouter, Depends, Query, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.dependencies import require_admin_permission
 from app.db.base import get_db
+from app.db.models import User
 from app.schemas.sync import (
     SyncGitLabRequest,
     SyncLogListResponse,
@@ -53,6 +55,7 @@ def create_sync_task(source: str, params: dict) -> SyncTaskResponse:
 async def sync_gitlab(
     sync_data: SyncGitLabRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin_permission),
 ) -> SyncTaskResponse:
     """Trigger GitLab data synchronization."""
     params = sync_data.model_dump(exclude_none=True)
@@ -63,6 +66,7 @@ async def sync_gitlab(
 async def sync_trae(
     sync_data: SyncTraeRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin_permission),
 ) -> SyncTaskResponse:
     """Trigger Trae data synchronization."""
     params = sync_data.model_dump(exclude_none=True)
@@ -73,6 +77,7 @@ async def sync_trae(
 async def sync_zendao(
     sync_data: SyncZendaoRequest,
     db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(require_admin_permission),
 ) -> SyncTaskResponse:
     """Trigger Zendao data synchronization."""
     params = sync_data.model_dump(exclude_none=True)

@@ -252,7 +252,7 @@ class TestUserPlatformAccountModel:
         account = UserPlatformAccount(
             user_id=user.id,
             platform="gitlab",
-            account="gitlab_username",
+            account_id="gitlab_username",
         )
         session.add(account)
         await session.commit()
@@ -266,7 +266,7 @@ class TestUserPlatformAccountModel:
 
         assert saved_account.id is not None
         assert saved_account.platform == "gitlab"
-        assert saved_account.account == "gitlab_username"
+        assert saved_account.account_id == "gitlab_username"
 
     @pytest.mark.asyncio
     async def test_platform_enum_validation(self, session):
@@ -291,7 +291,7 @@ class TestUserPlatformAccountModel:
             account = UserPlatformAccount(
                 user_id=user.id,
                 platform=platform,
-                account=f"{platform}_user_unique",
+                account_id=f"{platform}_user_unique",
             )
             session.add(account)
 

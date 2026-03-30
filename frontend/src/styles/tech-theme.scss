@@ -1,0 +1,249 @@
+// 科技风深色主题 - 固定1920x1080分辨率
+// 主背景: #0a1929 (深蓝黑)
+// 强调色: #00d4ff (科技青)
+// 辅助色: #ff006e (霓虹粉), #00ff88 (荧光绿)
+
+:root {
+  // 主色调
+  --tech-bg-primary: #0a1929;
+  --tech-bg-secondary: #0d2137;
+  --tech-bg-tertiary: #132f4c;
+  --tech-bg-card: rgba(13, 33, 55, 0.8);
+
+  // 强调色
+  --tech-cyan: #00d4ff;
+  --tech-cyan-light: #66e5ff;
+  --tech-cyan-dark: #0099cc;
+  --tech-pink: #ff006e;
+  --tech-pink-light: #ff66a3;
+  --tech-green: #00ff88;
+  --tech-green-light: #66ffb3;
+  --tech-orange: #ff9500;
+  --tech-purple: #9d4edd;
+
+  // 文字颜色
+  --tech-text-primary: #ffffff;
+  --tech-text-secondary: rgba(255, 255, 255, 0.85);
+  --tech-text-muted: rgba(255, 255, 255, 0.6);
+  --tech-text-disabled: rgba(255, 255, 255, 0.38);
+
+  // 边框颜色
+  --tech-border-primary: rgba(0, 212, 255, 0.3);
+  --tech-border-secondary: rgba(0, 212, 255, 0.15);
+  --tech-border-glow: rgba(0, 212, 255, 0.5);
+
+  // 发光效果
+  --tech-glow-cyan: 0 0 20px rgba(0, 212, 255, 0.4);
+  --tech-glow-cyan-sm: 0 0 10px rgba(0, 212, 255, 0.3);
+  --tech-glow-pink: 0 0 20px rgba(255, 0, 110, 0.4);
+  --tech-glow-green: 0 0 20px rgba(0, 255, 136, 0.4);
+  --tech-glow-inner: inset 0 0 20px rgba(0, 212, 255, 0.1);
+
+  // 渐变
+  --tech-gradient-primary: linear-gradient(135deg, #00d4ff 0%, #0099cc 100%);
+  --tech-gradient-pink: linear-gradient(135deg, #ff006e 0%, #9d4edd 100%);
+  --tech-gradient-green: linear-gradient(135deg, #00ff88 0%, #00cc6a 100%);
+  --tech-gradient-bg: linear-gradient(180deg, #0a1929 0%, #0d2137 100%);
+  --tech-gradient-header: linear-gradient(90deg, rgba(0, 212, 255, 0.1) 0%, rgba(0, 212, 255, 0.05) 100%);
+
+  // 间距系统
+  --tech-gap-xs: 4px;
+  --tech-gap-sm: 8px;
+  --tech-gap-md: 16px;
+  --tech-gap-lg: 24px;
+  --tech-gap-xl: 32px;
+
+  // 圆角
+  --tech-radius-sm: 4px;
+  --tech-radius-md: 8px;
+  --tech-radius-lg: 12px;
+  --tech-radius-xl: 16px;
+
+  // 字体
+  --tech-font-mono: 'JetBrains Mono', 'Fira Code', 'Consolas', monospace;
+  --tech-font-chinese: 'Noto Sans SC', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+
+  // 固定尺寸 (1920x1080)
+  --tech-screen-width: 1920px;
+  --tech-screen-height: 1080px;
+  --tech-header-height: 64px;
+  --tech-sidebar-width: 240px;
+  --tech-content-width: calc(1920px - 240px);
+}
+
+// 全局样式
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-family: var(--tech-font-chinese);
+  font-size: 14px;
+  color: var(--tech-text-primary);
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--tech-bg-primary);
+  min-width: var(--tech-screen-width);
+  min-height: var(--tech-screen-height);
+  overflow-x: auto;
+}
+
+// 科技风滚动条
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--tech-bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--tech-border-primary);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--tech-cyan);
+}
+
+// 选中文字样式
+::selection {
+  background: rgba(0, 212, 255, 0.3);
+  color: var(--tech-text-primary);
+}
+
+// Element Plus 主题覆盖
+.el-button {
+  font-family: var(--tech-font-chinese);
+}
+
+.el-button--primary {
+  background: var(--tech-gradient-primary);
+  border: none;
+  box-shadow: var(--tech-glow-cyan-sm);
+
+  &:hover {
+    box-shadow: var(--tech-glow-cyan);
+  }
+}
+
+.el-input__wrapper {
+  background: var(--tech-bg-tertiary) !important;
+  border: 1px solid var(--tech-border-secondary) !important;
+  box-shadow: none !important;
+
+  &.is-focus {
+    border-color: var(--tech-cyan) !important;
+    box-shadow: var(--tech-glow-cyan-sm) !important;
+  }
+}
+
+.el-input__inner {
+  color: var(--tech-text-primary) !important;
+  font-family: var(--tech-font-chinese);
+}
+
+.el-table {
+  background: transparent !important;
+
+  th {
+    background: var(--tech-bg-tertiary) !important;
+    color: var(--tech-cyan) !important;
+    font-family: var(--tech-font-mono);
+    font-weight: 600;
+    border-bottom: 1px solid var(--tech-border-primary) !important;
+  }
+
+  td {
+    background: transparent !important;
+    color: var(--tech-text-secondary) !important;
+    border-bottom: 1px solid var(--tech-border-secondary) !important;
+  }
+
+  tr:hover > td {
+    background: rgba(0, 212, 255, 0.05) !important;
+  }
+}
+
+.el-pagination {
+  .btn-prev,
+  .btn-next,
+  .number {
+    background: var(--tech-bg-tertiary) !important;
+    color: var(--tech-text-secondary) !important;
+    border: 1px solid var(--tech-border-secondary) !important;
+
+    &:hover {
+      color: var(--tech-cyan) !important;
+      border-color: var(--tech-cyan) !important;
+    }
+  }
+
+  .number.is-active {
+    background: var(--tech-cyan) !important;
+    color: var(--tech-bg-primary) !important;
+    border-color: var(--tech-cyan) !important;
+  }
+}
+
+.el-dialog {
+  background: var(--tech-bg-secondary) !important;
+  border: 1px solid var(--tech-border-primary);
+  box-shadow: var(--tech-glow-cyan-sm);
+
+  .el-dialog__header {
+    border-bottom: 1px solid var(--tech-border-secondary);
+  }
+
+  .el-dialog__title {
+    color: var(--tech-cyan);
+    font-family: var(--tech-font-mono);
+  }
+}
+
+.el-form-item__label {
+  color: var(--tech-text-secondary) !important;
+}
+
+.el-select-dropdown {
+  background: var(--tech-bg-secondary) !important;
+  border: 1px solid var(--tech-border-primary) !important;
+
+  .el-select-dropdown__item {
+    color: var(--tech-text-secondary);
+
+    &:hover,
+    &.selected {
+      background: rgba(0, 212, 255, 0.1) !important;
+      color: var(--tech-cyan) !important;
+    }
+  }
+}
+
+.el-tag {
+  border: 1px solid var(--tech-border-primary);
+  background: rgba(0, 212, 255, 0.1);
+  color: var(--tech-cyan);
+}
+
+.el-tag--success {
+  border-color: rgba(0, 255, 136, 0.3);
+  background: rgba(0, 255, 136, 0.1);
+  color: var(--tech-green);
+}
+
+.el-tag--danger {
+  border-color: rgba(255, 0, 110, 0.3);
+  background: rgba(255, 0, 110, 0.1);
+  color: var(--tech-pink);
+}
+
+.el-tag--warning {
+  border-color: rgba(255, 149, 0, 0.3);
+  background: rgba(255, 149, 0, 0.1);
+  color: var(--tech-orange);
+}

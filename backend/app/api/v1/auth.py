@@ -7,66 +7,39 @@ from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
-from pydantic import BaseModel
-from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.dependencies import get_db
-from app.core.security import decode_token
+from app.core.dependencies import get_auth_service, get_current_active_user, get_db
+from app.core.logging import get_logger
 from app.db.models import User
-from app.services.auth_service import login_user, refresh_access_token
+from app.schemas import (
+    LoginRequest,
+    LogoutRequest,
+    LogoutResponse,
+    RefreshTokenRequest,
+    TokenRefreshResponse,
+    TokenResponse,
+    UserResponse,
+)
 
 router = APIRouter(prefix="/auth", tags=["authentication"])
+logger = get_logger(__name__)
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/auth/login")
-
-
-class TokenResponse(BaseModel):
-    """Token response model."""
-
-    access_token: str
-    token_type: str
-
-
-class TokenRefreshResponse(BaseModel):
-    """Token refresh response model."""
-
-    access_token: str
-    refresh_token: str
-    token_type: str
-
-
-class RefreshTokenRequest(BaseModel):
-    """Refresh token request model."""
-
-    refresh_token: str
-
-
-class UserResponse(BaseModel):
-    """User response model."""
-
-    id: int
-    username: str
-    email: str
-    department: str
-    is_active: bool
-
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
 
 
 @router.post("/login", response_model=TokenRefreshResponse)
 async def login(
     form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
-    db: AsyncSession = Depends(get_db),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    auth_svc: Annotated[type, Depends(get_auth_service)],
 ) -> TokenRefreshResponse:
     """Login endpoint to get access and refresh tokens.
 
     Args:
         form_data: OAuth2 form with username and password.
         db: Database session.
+        auth_svc: Auth service module.
 
     Returns:
         Token response with access and refresh tokens.
@@ -74,32 +47,38 @@ async def login(
     Raises:
         HTTPException: If authentication fails.
     """
-    result = await login_user(db, form_data.username, form_data.password)
+    result = await auth_svc.login_user(db, form_data.username, form_data.password)
 
     if not result:
+        logger.warning(f"Login failed for user '{form_data.username}'")
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect username or password",
             headers={"WWW-Authenticate": "Bearer"},
         )
 
+    logger.info(f"User '{form_data.username}' logged in successfully")
+
     return TokenRefreshResponse(
         access_token=result["access_token"],
         refresh_token=result["refresh_token"],
         token_type=result["token_type"],
+        expires_in=3600,
     )
 
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh(
     request: RefreshTokenRequest,
-    db: AsyncSession = Depends(get_db),
+    db: Annotated[AsyncSession, Depends(get_db)],
+    auth_svc: Annotated[type, Depends(get_auth_service)],
 ) -> TokenResponse:
     """Refresh access token using refresh token.
 
     Args:
         request: Refresh token request.
         db: Database session.
+        auth_svc: Auth service module.
 
     Returns:
         New access token response.
@@ -107,7 +86,7 @@ async def refresh(
     Raises:
         HTTPException: If refresh token is invalid.
     """
-    result = await refresh_access_token(db, request.refresh_token)
+    result = await auth_svc.refresh_access_token(db, request.refresh_token)
 
     if not result:
         raise HTTPException(
@@ -122,51 +101,39 @@ async def refresh(
     )
 
 
-async def get_current_user(
+@router.post("/logout", response_model=LogoutResponse)
+async def logout_endpoint(
+    request: LogoutRequest,
     token: Annotated[str, Depends(oauth2_scheme)],
-    db: AsyncSession = Depends(get_db),
-) -> User:
-    """Get current user from token.
+    auth_svc: Annotated[type, Depends(get_auth_service)],
+) -> LogoutResponse:
+    """Logout endpoint to invalidate tokens.
 
     Args:
-        token: JWT access token.
-        db: Database session.
+        request: Logout request with optional refresh token.
+        token: Current access token from Authorization header.
+        auth_svc: Auth service module.
 
     Returns:
-        Current user.
+        Logout success message.
 
     Raises:
-        HTTPException: If token is invalid or user not found.
+        HTTPException: If logout fails.
     """
-    credentials_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    success = await auth_svc.logout(token, request.refresh_token)
 
-    try:
-        payload = decode_token(token)
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except Exception as err:
-        raise credentials_exception from err
+    if not success:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Failed to logout",
+        )
 
-    result = await db.execute(select(User).where(User.id == int(user_id)))
-    user = result.scalar_one_or_none()
-
-    if user is None:
-        raise credentials_exception
-
-    if not user.is_active:
-        raise credentials_exception
-
-    return user
+    return LogoutResponse(message="Successfully logged out")
 
 
 @router.get("/me", response_model=UserResponse)
 async def get_me(
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(get_current_active_user)],
 ) -> UserResponse:
     """Get current user information.
 
@@ -182,4 +149,6 @@ async def get_me(
         email=current_user.email,
         department=current_user.department,
         is_active=current_user.is_active,
+        role_id=current_user.role_id,
+        role=None,  # TODO: Load role info if needed
     )

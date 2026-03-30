@@ -6,64 +6,27 @@ TDD Green Phase: Implement users API endpoints to make tests pass.
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from pydantic import BaseModel, field_validator
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.v1.auth import get_current_user
-from app.core.dependencies import get_db
+from app.core.dependencies import (
+    Permissions,
+    can_modify_user,
+    get_current_user,
+    get_db,
+    is_admin,
+    require_admin_permission,
+)
 from app.core.security import get_password_hash
 from app.db.models import User
+from app.schemas import (
+    UserCreate,
+    UserResponse,
+    UserUpdate,
+)
+from app.services.auth_service import get_user_by_id
 
 router = APIRouter(prefix="/users", tags=["users"])
-
-
-class UserCreate(BaseModel):
-    """User creation model."""
-
-    username: str
-    email: str
-    password: str
-    department: str
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v: str) -> str:
-        """Validate email format."""
-        if "@" not in v:
-            raise ValueError("Invalid email address")
-        return v
-
-
-class UserUpdate(BaseModel):
-    """User update model."""
-
-    email: str | None = None
-    department: str | None = None
-    is_active: bool | None = None
-
-    @field_validator("email")
-    @classmethod
-    def validate_email(cls, v: str | None) -> str | None:
-        """Validate email format."""
-        if v is not None and "@" not in v:
-            raise ValueError("Invalid email address")
-        return v
-
-
-class UserResponse(BaseModel):
-    """User response model."""
-
-    id: int
-    username: str
-    email: str
-    department: str
-    is_active: bool
-
-    class Config:
-        """Pydantic config."""
-
-        from_attributes = True
 
 
 @router.get("", response_model=list[UserResponse])
@@ -86,14 +49,25 @@ async def get_users(
     """
     result = await db.execute(select(User).offset(skip).limit(limit))
     users = result.scalars().all()
-    return [UserResponse.model_validate(user) for user in users]
+    return [
+        UserResponse(
+            id=user.id,
+            username=user.username,
+            email=user.email,
+            department=user.department,
+            is_active=user.is_active,
+            role_id=user.role_id,
+            role=None,
+        )
+        for user in users
+    ]
 
 
 @router.post("", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
 async def create_user(
     user_data: UserCreate,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(require_admin_permission)],
 ) -> UserResponse:
     """Create a new user.
 
@@ -131,13 +105,22 @@ async def create_user(
         password_hash=get_password_hash(user_data.password),
         department=user_data.department,
         is_active=True,
+        role_id=user_data.role_id,
     )
 
     db.add(new_user)
     await db.commit()
     await db.refresh(new_user)
 
-    return UserResponse.model_validate(new_user)
+    return UserResponse(
+        id=new_user.id,
+        username=new_user.username,
+        email=new_user.email,
+        department=new_user.department,
+        is_active=new_user.is_active,
+        role_id=new_user.role_id,
+        role=None,
+    )
 
 
 @router.get("/{user_id}", response_model=UserResponse)
@@ -159,8 +142,7 @@ async def get_user(
     Raises:
         HTTPException: If user not found.
     """
-    result = await db.execute(select(User).where(User.id == user_id))
-    user = result.scalar_one_or_none()
+    user = await get_user_by_id(db, user_id)
 
     if not user:
         raise HTTPException(
@@ -168,7 +150,15 @@ async def get_user(
             detail="User not found",
         )
 
-    return UserResponse.model_validate(user)
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        department=user.department,
+        is_active=user.is_active,
+        role_id=user.role_id,
+        role=None,
+    )
 
 
 @router.put("/{user_id}", response_model=UserResponse)
@@ -190,8 +180,23 @@ async def update_user(
         Updated user.
 
     Raises:
-        HTTPException: If user not found.
+        HTTPException: If user not found or permission denied.
     """
+    # Load current user's role to check permissions
+    from app.db.models import Role
+
+    result = await db.execute(select(Role).where(Role.id == current_user.role_id))
+    current_user_role = result.scalar_one_or_none()
+    current_user_permissions = current_user_role.permissions if current_user_role else []
+    is_current_user_admin = Permissions.ALL in current_user_permissions or Permissions.ADMIN in current_user_permissions
+
+    # Check permission - admin can update any user, regular users can only update themselves
+    if not is_current_user_admin and current_user.id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Permission denied: cannot modify other users",
+        )
+
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
 
@@ -206,30 +211,53 @@ async def update_user(
         user.email = user_data.email
     if user_data.department is not None:
         user.department = user_data.department
+
+    # Only admin can update is_active and role_id
     if user_data.is_active is not None:
+        if not is_current_user_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission denied: only admin can change active status",
+            )
         user.is_active = user_data.is_active
+
+    if user_data.role_id is not None:
+        if not is_current_user_admin:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Permission denied: only admin can change role",
+            )
+        user.role_id = user_data.role_id
 
     await db.commit()
     await db.refresh(user)
 
-    return UserResponse.model_validate(user)
+    return UserResponse(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        department=user.department,
+        is_active=user.is_active,
+        role_id=user.role_id,
+        role=None,
+    )
 
 
 @router.delete("/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     user_id: int,
     db: Annotated[AsyncSession, Depends(get_db)],
-    current_user: Annotated[User, Depends(get_current_user)],
+    current_user: Annotated[User, Depends(require_admin_permission)],
 ) -> None:
     """Delete user.
 
     Args:
         user_id: User ID.
         db: Database session.
-        current_user: Current authenticated user.
+        current_user: Current authenticated user (must be admin).
 
     Raises:
-        HTTPException: If user not found.
+        HTTPException: If user not found or permission denied.
     """
     result = await db.execute(select(User).where(User.id == user_id))
     user = result.scalar_one_or_none()
@@ -238,6 +266,13 @@ async def delete_user(
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="User not found",
+        )
+
+    # Prevent admin from deleting themselves
+    if user.id == current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own account",
         )
 
     await db.delete(user)
